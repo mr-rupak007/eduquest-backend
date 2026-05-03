@@ -84,14 +84,15 @@ app.use("/api/admin", require("./routes/admin"));
 
 // ================= STATIC FILES =================
 app.use("/uploads", express.static("uploads"));
+// STATIC
 app.use(express.static(path.join(__dirname, "frontend")));
 
-// ================= ROOT =================
+// ROOT
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend/index.html"));
 });
 
-// ================= FALLBACK (VERY IMPORTANT - LAST) =================
+// FALLBACK
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, "frontend/index.html"));
 });
