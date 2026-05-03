@@ -2,12 +2,10 @@ const mysql = require("mysql2");
 
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
-
-  // 🔥 REQUIRED for Railway
   ssl: {
     rejectUnauthorized: false
   }
@@ -15,9 +13,9 @@ const db = mysql.createConnection({
 
 db.connect((err) => {
   if (err) {
-    console.error("DB Connection Failed ❌", err);
+    console.error("❌ DB connection failed:", err);
   } else {
-    console.log("MySQL Connected ✅");
+    console.log("✅ MySQL Connected");
   }
 });
 

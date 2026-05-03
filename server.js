@@ -84,17 +84,26 @@ app.use("/api/admin", require("./routes/admin"));
 
 // ================= STATIC FILES =================
 app.use("/uploads", express.static("uploads"));
-// STATIC
-app.use(express.static(path.join(__dirname, "frontend")));
 
-// ROOT
+// 🔥 Absolute safe path (fix for Render)
+const frontendPath = path.join(__dirname, "frontend");
+
+// Serve static frontend
+app.use(express.static(frontendPath));
+
+// ================= ROOT =================
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/index.html"));
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-// FALLBACK
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/index.html"));
+// ================= FALLBACK (SAFE SPA HANDLING) =================
+app.use((req, res, next) => {
+  // ❗ IMPORTANT: do NOT override API routes
+  if (req.originalUrl.startsWith("/api")) {
+    return next();
+  }
+
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // ================= SERVER =================
