@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EDUQUEST</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="overlay" class="overlay"></div>
+
+<!-- HEADER -->
+<header>
+    <div class="left">
+        <button id="toggleBtn">
+    <span></span>
+    <span></span>
+    <span></span>
+</button>
+        <h3>Welcome, <span id="username">Guest</span></h3>
+    </div>
+
+    <div class="center">
+    <h1 style="margin:0;">EDUQUEST</h1>
+</div>
+
+    <div class="right">
+    <input 
+       type="search"
+       id="searchInput"
+       name="search"
+       placeholder="Search courses..."
+       autocomplete="off"
+    >
+
+    <div class="avatar-container">
+        <div class="avatar" onclick="toggleAvatarMenu(event)">👤</div>
+
+        <div class="avatar-menu" id="avatarMenu">
+            <p id="avatarName">Guest</p>
+            <button onclick="closeAvatarMenu(); viewProfile()">View Profile</button>
+        </div>
+        <div id="profileHint" class="profile-hint">
+            👆 Click here to view your profile
+        </div>
+    </div>
+</div>
+</div>
+</header>
+
+<!-- SIDEBAR -->
+
+<div id="sidebar" class="sidebar">
+    <button id="closeBtn">✖</button>
+
+    <a href="javascript:void(0)" onclick="showSection('browse', this)">
+    <span>📚</span> Browse
+</a>
+
+<a id="dashboardLink" href="javascript:void(0)" onclick="showSection('dashboard', this)">
+    <span>📊</span> Dashboard
+</a>
+
+<a id="loginLink" href="javascript:void(0)" onclick="showSection('login', this)">
+    <span>🔑</span> Login
+</a>
+
+<a id="registerLink" href="javascript:void(0)" onclick="showSection('register', this)">
+    <span>📝</span> Register
+</a>
+
+<a id="adminLoginLink" href="javascript:void(0)" onclick="showSection('adminLogin', this)">
+    <span>🛠️</span> Admin Login
+</a>
+
+<a id="adminPanelLink" href="javascript:void(0)" onclick="showSection('adminPanel', this)" style="display:none;">
+    <span>🛠️</span> Admin Panel
+</a>
+
+    <!-- ✅ LOGOUT (BOTTOM) -->
+    <div class="sidebar-bottom">
+    <a id="logoutLink" href="javascript:void(0)" onclick="logout()">
+    <span>⇦</span> Logout
+</a>
+</div>
+</div>
+
+<main id="content">
+
+  <div id="breadcrumbContainer"></div>
+
+    <div id="hero" class="hero">
+      <div class="hero-container">
+        
+        <div class="hero-left">
+
+          <h1>
+            <span class="heading-text">
+              Upgrade Your <span class="highlight-text">Skills</span>
+            </span>
+            <span class="emoji">🚀</span>
+          </h1>
+
+          <p id="typing-text"></p>
+
+          <div class="hero-actions">
+            <button class="hero-btn" onclick="showSection('browse')">Explore Courses</button>
+            <button class="hero-outline">Watch Demo</button>
+          </div>
+        </div>
+    
+        <div class="hero-right">
+
+          <!-- SVG ILLUSTRATION -->
+          <div class="hero-illustration">
+            <svg viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+              
+              <!-- background glow -->
+              <circle cx="250" cy="200" r="150" fill="url(#grad1)" opacity="0.4"/>
+         
+              <!-- floating cards -->
+               <rect x="120" y="120" width="120" height="80" rx="12" fill="#1e293b"/>
+               <rect x="260" y="80" width="120" height="80" rx="12" fill="#0f172a"/>
+               <rect x="200" y="220" width="120" height="80" rx="12" fill="#1e293b"/>
+         
+              <!-- play icon -->
+              <polygon points="240,170 240,210 280,190" fill="#22c55e"/>
+         
+              <defs>
+                <radialGradient id="grad1">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="transparent"/>
+                </radialGradient>
+              </defs>
+            </svg>
+          </div>
+         
+          <!-- KEEP YOUR STATS -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h2>10K+</h2>
+              <p>Students</p>
+            </div>
+             <div class="stat-card">
+               <h2>250+</h2>
+               <p>Courses</p>
+             </div>
+             <div class="stat-card full-width">
+               <h2>95%</h2>
+               <p>Success Rate</p>
+             </div>
+          </div>
+         
+         </div>
+    
+            <div class="scroll-indicator">
+              ↓ Explore Courses
+            </div>
+
+      </div>
+    </div>
+
+  </div>
+
+<!-- MAIN CONTENT -->
+
+    <section id="adminPanel" class="section">
+
+  <div class="container">
+
+    <h2>🛠️ Admin Panel</h2>
+
+    <div class="dashboard-cards">
+
+      <div class="dash-card">
+        <h1 id="adminTotalUsers">0</h1>
+        <p>Total Users</p>
+
+        <button class="details-btn" onclick="showAdminSection('users', this)">
+            👥 View Users
+        </button>
+      </div>
+
+      <div class="dash-card">
+        <h1 id="adminTotalCourses">0</h1>
+        <p>Total Courses</p>
+
+        <button class="details-btn" onclick="showAdminSection('courses', this)">
+            📚 View Courses
+        </button>
+      </div>
+
+      <div class="dash-card">
+        <h1 id="adminTotalEarnings">₹0</h1>
+        <p>Admin Earnings</p>
+
+        <button class="details-btn" onclick="showAdminSection('earnings', this)">
+          💰 View Earnings
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 🔥 MUST BE INSIDE CONTAINER -->
+    <div id="adminUsers" style="margin-top:20px;"></div>
+    <div id="adminCourses" style="margin-top:20px; display:none;"></div>
+
+    <div id="adminEarnings" style="margin-top:20px; display:none;">
+      <div class="admin-animate">
+
+        <div class="admin-header">
+          <h2>💰 Earnings</h2>
+          <button class="admin-back-btn" onclick="closeAdminSection()">⬅ Back</button>
+        </div>
+        
+        <div style="margin-top:15px;">
+  <input type="number" id="commissionInput" placeholder="Set commission %" min="1" max="100">
+  <button onclick="updateCommission()">Update</button>
+</div>
+
+        <p>Total Revenue: ₹<span id="totalRevenue">0</span></p>
+        <p>Admin Commission: ₹<span id="adminEarning">0</span></p>
+        <p>Teacher Payout: ₹<span id="teacherPayout">0</span></p>
+        <canvas id="adminChartCanvas"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+    <section id="browse" class="section active">
+        <h2>Browse Courses</h2>
+        <div id="courseContainer"></div>
+        <div id="courseList"></div>
+      </section>
+
+    <section id="dashboard" class="section">
+
+    <div class="container">
+        <!-- 🔥 MOVE BUTTON HERE -->
+        <button class="section-close" onclick="closeStudentDetails(); showSection('browse')">×</button>
+
+        <h2>📊 Dashboard</h2>
+
+        <div class="dashboard-cards">
+
+    <div class="dash-card">
+        <h1 id="totalCourses">0</h1>
+        <p>Total Courses</p>
+
+        <button onclick="viewStudentDetails('all', this)" class="details-btn">
+            📚 All Courses
+        </button>
+    </div>
+
+    <div class="dash-card">
+        <h1 id="inProgress">0</h1>
+        <p>In Progress</p>
+
+        <button onclick="viewStudentDetails('progress', this)" class="details-btn">
+            ⏳ In Progress
+        </button>
+    </div>
+
+    <div class="dash-card">
+        <h1 id="completed">0</h1>
+        <p>Completed</p>
+
+        <button onclick="viewStudentDetails('completed', this)" class="details-btn">
+            ✅ Completed
+        </button>
+    </div>
+</div>
+<div id="studentDetailsBox" style="margin-top:20px;"></div>
+
+    </div>
+
+</section>
+
+<section id="teacherDashboard" class="section">
+
+  <div class="container">
+
+    <!-- HEADER -->
+    <div class="teacher-header">
+      <h2>👨‍🏫 Teacher Dashboard</h2>
+
+      <button class="add-course-btn" onclick="toggleAddCourseForm()">
+        ➕ Add Course
+      </button>
+    </div>
+
+    <!-- CARDS -->
+    <div class="dashboard-cards">
+
+      <div class="dash-card">
+        <h1 id="totalCreated">0</h1>
+        <p>Courses Created</p>
+
+        <button class="details-btn" onclick="toggleCourseDetails()">
+          📚 Course Details
+        </button>
+      </div>
+
+      <div class="dash-card">
+        <h1 id="totalStudents">0</h1>
+        <p>Total Students</p>
+
+        <button class="details-btn" onclick="viewStudents()">
+          👨‍🎓 View Students
+        </button>
+      </div>
+
+      <div class="dash-card">
+        <h1 id="teacherEarnings">₹0</h1>
+        <p>Total Earnings</p>
+
+        <button class="details-btn" onclick="toggleEarningsDetails()">
+          💰 View Earnings
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 🔥 DETAILS BOX (FIXED POSITION BELOW CARDS) -->
+    <div id="courseDetailsBox" class="details-box"></div>
+
+  </div>
+
+</section>
+
+<!-- 🔥 FORM (HIDDEN INITIALLY) -->
+<div id="addCourseModal" class="overlay">
+
+    <div class="form-card">
+
+        <button class="form-close" onclick="closeAddCourse()">✖</button>
+
+        <h2>Add Course</h2>
+
+        <form>
+
+            <!-- keep your SAME inputs (with IDs) -->
+            
+            <div class="input-group">
+                <input type="text" id="courseTitle" required placeholder=" ">
+                <label>Course Title</label>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="courseCategory" required placeholder=" ">
+                <label>Category</label>
+            </div>
+
+            <div class="input-group">
+                <select id="courseType" onchange="togglePriceField()" required>
+                    <option value="" disabled selected hidden></option>
+                    <option value="free">Free</option>
+                    <option value="paid">Paid</option>
+                </select>
+                <label>Course Type</label>
+            </div>
+
+            <div class="input-group" id="priceGroup" style="display:none;">
+                <input type="number" id="coursePrice" min="1" placeholder=" ">
+                <label>Price</label>
+            </div>
+
+            <div class="input-group">
+                <textarea id="courseDescription" placeholder=" " required></textarea>
+                <label>Course Description</label>
+            </div>
+
+            <button type="button" id="addCourseBtn" onclick="addCourse()">
+               Add Course
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+    </div>
+  </div>
+
+</section>
+
+   <!-- LOGIN -->
+<section id="login" class="section">
+  <form autocomplete="on">
+  <div class="form-card">
+<button class="form-close" onclick="showSection('browse')">×</button>
+  
+    
+          <h2>Welcome Back 👋</h2>
+      
+        
+    <div class="input-group">
+      <input 
+         type="text"
+         id="loginUser"
+         name="username"
+         autocomplete="username"
+         placeholder=" "
+         required
+      >
+      <label>Email or Mobile</label>
+      <small class="error-msg"></small>
+    </div>
+
+    <div class="input-group">
+      <input 
+        type="password"
+        id="loginPass"
+        name="password"
+        autocomplete="current-password"
+        placeholder=" "
+        required
+      >
+      <label>Password</label>
+      <span class="toggle-pass" onclick="togglePassword('loginPass', this)">👁</span>
+      <small class="error-msg"></small>
+    </div>
+
+    <button type="button" class="form-btn" onclick="login()">Login</button>
+    <p style="text-align:right; cursor:pointer; color:#3b82f6;"
+       onclick="showSection('forgot')">
+       Forgot Password?
+    </p>
+  </div>
+  </form>
+</section>
+
+<section id="forgot" class="section">
+  <div class="form-card">
+
+    <button class="form-close" onclick="showSection('login')">×</button>
+
+    <h2>Reset Password 🔐</h2>
+
+    <div class="input-group">
+      <input type="text" id="fpContact" placeholder=" " required>
+      <label>Email</label>
+    </div>
+
+    <button id="sendOtpBtn" class="form-btn" onclick="sendOTP('forgot')">Send OTP</button>
+    
+    <p id="otpTimer" style="margin-top:10px; color:#64748b;"></p>
+
+    <div id="otpSection" style="display:none; margin-top:15px;">
+
+      <div style="text-align:center; margin:10px 0;">
+        <span style="font-size:13px; color:#64748b;">Enter OTP</span>
+      </div>
+
+    <div class="otp-container">
+      <input type="text" maxlength="1" class="otp-input">
+      <input type="text" maxlength="1" class="otp-input">
+      <input type="text" maxlength="1" class="otp-input">
+      <input type="text" maxlength="1" class="otp-input">
+      <input type="text" maxlength="1" class="otp-input">
+      <input type="text" maxlength="1" class="otp-input">
+    </div>
+
+      <div class="input-group">
+        <input type="password" id="fpNewPass" placeholder=" ">
+        <label>New Password</label>
+      </div>
+
+      <button class="form-btn" onclick="resetPassword()">Reset Password</button>
+
+    </div>
+
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section id="register" class="section">
+  <div class="form-card">
+<button class="form-close" onclick="showSection('browse')">×</button>
+    <h2>Create Account 🚀</h2>
+
+   <div class="input-group">
+  <select id="role" onchange="toggleRegisterForm()" required>
+    <option value="" disabled selected hidden></option>
+    <option value="student">Student</option>
+    <option value="teacher">Teacher</option>
+  </select>
+  <label>Select Role</label>
+  <small class="error-msg"></small>
+</div>
+
+<!-- COMMON FIELDS -->
+<div class="input-group">
+  <input type="text" id="fullName" placeholder=" " required>
+  <label>Full Name</label>
+</div>
+
+<div class="input-group">
+  <input type="email" id="email" placeholder=" " required>
+  <label>Email</label>
+</div>
+
+<div class="input-group">
+  <input type="text" id="mobile" placeholder=" " required>
+  <label>Mobile Number</label>
+</div>
+
+<button type="button" class="form-btn" onclick="sendOTP('register')">
+  Send OTP
+</button>
+
+<div id="otpBox" style="display:none; margin-top:10px;">
+
+  <div class="otp-container">
+    <input type="text" maxlength="1" class="otp-input">
+    <input type="text" maxlength="1" class="otp-input">
+    <input type="text" maxlength="1" class="otp-input">
+    <input type="text" maxlength="1" class="otp-input">
+    <input type="text" maxlength="1" class="otp-input">
+    <input type="text" maxlength="1" class="otp-input">
+  </div>
+
+  <button class="form-btn" onclick="verifyOTP()">Verify OTP</button>
+
+</div>
+
+<div class="input-group">
+  <input type="number" id="age" min="10" max="100" placeholder=" " required>
+  <label>Age</label>
+</div>
+
+<div class="input-group">
+  <input type="text" id="location" placeholder=" " required>
+  <label>Location</label>
+</div>
+
+<!-- PASSWORD -->
+<div class="password-group">
+
+  <!-- PASSWORD -->
+  <div class="input-group">
+    <input 
+      type="password" 
+      id="regPass" 
+      placeholder=" "
+      oninput="checkStrength()"
+    >
+    <label>Password</label>
+    <span class="toggle-pass" onclick="togglePassword('regPass', this)">👁</span>
+  </div>
+
+  <!-- CONFIRM -->
+  <div class="input-group">
+    <input 
+      type="password" 
+      id="confirmPass" 
+      placeholder=" "
+    >
+    <label>Confirm Password</label>
+    <span class="toggle-pass" onclick="togglePassword('confirmPass', this)">👁</span>
+  </div>
+
+  <!-- ✅ NOW INSIDE SAME GROUP -->
+  <div class="strength-wrapper">
+    <div id="strengthBar"></div>
+    <span id="strengthText">Password strength</span>
+  </div>
+
+</div>
+
+<button type="button" class="form-btn" onclick="register()">
+  Create Account
+</button>
+
+</section>
+
+<section id="adminLogin" class="section">
+  <div class="form-card">
+
+    <button class="form-close" onclick="showSection('browse')">×</button>
+  
+         <h2>Admin Login 🛠️</h2>
+    
+    <div class="input-group">
+      <input type="text" id="adminUser" placeholder=" ">
+      <label>Admin Username</label>
+    </div>
+
+    <div class="input-group">
+  <input type="password" id="adminPass" placeholder=" ">
+  <label>Password</label>
+  <span class="toggle-pass" onclick="togglePassword('adminPass', this)">👁</span>
+</div>
+
+    <button class="form-btn" onclick="adminLogin()">Login</button>
+
+  </div>
+</section>
+
+<section id="profile" class="section">
+  <div class="container">
+
+    <button class="section-close" onclick="closeStudentDetails(); showSection('browse')">×</button>
+
+    <h2>👤 My Profile</h2>
+
+    <!-- VIEW MODE -->
+    <div id="profileView" class="profile-card">
+
+  <div class="profile-header">
+    <div class="profile-avatar">👤</div>
+    <div>
+      <h3 id="viewName"></h3>
+      <p class="profile-sub">User Profile</p>
+    </div>
+  </div>
+
+  <div class="profile-info">
+    <div class="info-row">
+      <span>📧 Email</span>
+      <span id="viewEmail"></span>
+    </div>
+
+    <div class="info-row">
+      <span>📱 Mobile</span>
+      <span id="viewMobile"></span>
+    </div>
+
+    <div class="info-row">
+      <span>🎂 Age</span>
+      <span id="viewAge"></span>
+    </div>
+
+    <div class="info-row">
+      <span>📍 Location</span>
+      <span id="viewLocation"></span>
+    </div>
+  </div>
+
+  <button class="profile-btn" onclick="enableEdit()">
+    ✏️ Edit Profile
+  </button>
+
+</div>
+
+    <!-- EDIT MODE -->
+    <div id="profileEdit" class="form-card" style="display:none;">
+
+  <button class="profile-close" onclick="closeProfile()">×</button>
+
+  <!-- BASIC FIELDS -->
+  <div class="input-group">
+    <input type="text" id="profileFullName" placeholder=" ">
+    <label>Full Name</label>
+  </div>
+
+  <div class="input-group">
+    <input type="email" id="profileEmail" placeholder=" ">
+    <label>Email</label>
+  </div>
+
+  <div class="input-group">
+    <input type="text" id="profileMobile" placeholder=" ">
+    <label>Mobile</label>
+  </div>
+
+  <div class="input-group">
+    <input type="number" id="profileAge" placeholder=" ">
+    <label>Age</label>
+  </div>
+
+  <div class="input-group">
+    <input type="text" id="profileLocation" placeholder=" ">
+    <label>Location</label>
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="input-group password-group">
+    <input 
+      type="password" 
+      id="profilePass" 
+      oninput="checkStrength('profile')" 
+      placeholder=" "
+    >
+    <label>New Password</label>
+    <span class="toggle-pass" onclick="togglePassword('profilePass', this)">👁</span>
+  </div>
+
+  <!-- ✅ FIXED (UNIQUE IDS) -->
+  <div class="strength-wrapper">
+    <div id="profileStrengthBar"></div>
+    <span id="profileStrengthText">Password strength</span>
+  </div>
+
+  <div class="input-group password-group">
+    <input 
+      type="password" 
+      id="confirmProfilePass" 
+      oninput="checkPasswordMatch()" 
+      placeholder=" "
+    >
+    <label>Confirm Password</label>
+    <span class="toggle-pass" onclick="togglePassword('confirmProfilePass', this)">👁</span>
+  </div>
+
+  <!-- TEACHER FIELDS -->
+  <div id="teacherProfileFields" style="display:none; margin-top:10px;">
+
+    <div class="input-group">
+      <input type="text" id="profileSubject" placeholder=" ">
+      <label>Subject</label>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="profileSpecialization" placeholder=" ">
+      <label>Specialization</label>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="profileOccupation" placeholder=" ">
+      <label>Current Occupation</label>
+    </div>
+
+  </div>
+
+  <button class="form-btn" onclick="saveProfile()">Save Changes</button>
+
+</div>
+</section>
+
+<div id="toastContainer"></div>
+
+<div id="successModal" class="success-modal">
+  <div class="success-box">
+    <div class="checkmark"></div>
+    <h3 id="successText">Success</h3>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="deleteModal" class="success-modal">
+
+  <div class="success-box">
+    <h3>Are you sure?</h3>
+    <p>This action cannot be undone</p>
+
+    <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
+      
+      <button class="form-btn danger-btn" onclick="confirmDeleteUser()">
+          <span>Yes, Delete</span>
+      </button>
+
+      <button class="form-btn" style="background:#64748b;" onclick="closeDeleteModal()">
+        Cancel
+      </button>
+
+    </div>
+  </div>
+
+</div>
+
+
+
+<div id="deleteCourseModal" class="overlay">
+
+  <div class="form-card">
+
+    <h3>⚠️ Are you sure?</h3>
+    <p>This action cannot be undone.</p>
+
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button onclick="confirmDeleteCourse()" class="danger-btn">
+        Yes, Delete
+      </button>
+
+      <button onclick="closeDeleteCourseModal()" class="form-btn">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="confirmModal" class="confirm-modal">
+  <div class="confirm-box">
+
+    <h3 id="confirmTitle">Confirm Action</h3>
+    <p id="confirmText">Are you sure?</p>
+
+    <div class="confirm-actions">
+      <button id="confirmCancel">Cancel</button>
+      <button id="confirmOk">Confirm</button>
+    </div>
+
+  </div>
+</div>
+
+<div id="deleteVideoModal" class="modal-overlay">
+
+  <div class="modal-box">
+
+    <h3>
+      ⚠ Delete selected videos 
+      <span id="deleteCountBadge" class="delete-badge">0</span>
+    </h3>
+
+
+    <div class="modal-actions">
+
+      <button 
+        type="button"
+        id="confirmDeleteBtn"
+        onclick="confirmDeleteVideos()" 
+        class="modal-delete"
+        disabled>
+        Yes, Delete
+      </button>
+
+      <button 
+        type="button"
+        onclick="closeDeleteVideoModal()"
+        class="modal-cancel">
+        Cancel
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div id="undoToast" class="undo-toast">
+  Videos deleted
+  <button onclick="undoDelete()">Undo</button>
+</div>
+
+<section id="courseDetails" class="section">
+
+  <div class="container">
+
+    <div id="courseDetailsContent"></div>
+  </div>
+
+</section>
+
+<div id="unlockModal" class="modal-overlay">
+  <div class="modal-box">
+
+    <h2>🔒 Locked Content</h2>
+    <p>Enroll to unlock all lessons</p>
+
+    <div class="modal-actions">
+      <button id="unlockEnrollBtn" class="unlock-btn">
+        🚀 Enroll Now
+      </button>
+
+      <button onclick="closeUnlockModal()" class="cancel-btn">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🔴 REJECT MODAL -->
+<div id="rejectModal" class="reject-overlay">
+
+  <div class="reject-modal">
+
+    <h2>Reject Course</h2>
+
+    <div class="input-group">
+      <textarea id="rejectRemarkInput" required placeholder=" " rows="4"></textarea>
+      <label>Enter rejection reason</label>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" onclick="closeRejectModal()" class="btn-cancel">
+        Cancel
+      </button>
+
+      <button type="button" onclick="submitReject()" class="btn-primary">
+        Submit
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+</main>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
