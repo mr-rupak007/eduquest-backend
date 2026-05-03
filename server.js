@@ -98,17 +98,14 @@ app.get("/", (req, res) => {
 
 
 
-app.get("/debug-db", (req, res) => {
-  db.query("SHOW TABLES", (err, data) => {
-    if (err) {
-      console.error("DEBUG DB ERROR:", err);
-      return res.status(500).json({
-        message: "DB error",
-        error: err.message
-      });
-    }
-    res.json(data);
-  });
+app.get("/debug-db", async (req, res) => {
+  try {
+    const [rows] = await db.query("SHOW TABLES");
+    res.json(rows);
+  } catch (err) {
+    console.error("DEBUG ERROR:", err);
+    res.status(500).json(err.message);
+  }
 });
 
 
