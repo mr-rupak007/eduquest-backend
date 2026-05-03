@@ -156,71 +156,51 @@ exports.getAllCoursesAdmin = (req, res) => {
   });
 };
 
-exports.getCourses = (req, res) => {
+exports.getCourses = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.id : null;
 
-  const userId = req.user ? req.user.id : null;
-
-  const query = `
-    SELECT 
-      c.*,
-      u.name AS teacher_name,
-
-      r.avgRating,
-      r.totalRatings,
-
-      IF(e.user_id IS NOT NULL, 1, 0) AS isEnrolled,
-      IFNULL(e.progress, 0) AS progress
-
-    FROM courses c
-
-    LEFT JOIN users u 
-      ON c.teacher_id = u.id
-
-    LEFT JOIN (
+    const query = `
       SELECT 
-        course_id,
-        ROUND(AVG(rating),1) AS avgRating,
-        COUNT(id) AS totalRatings
-      FROM ratings
-      GROUP BY course_id
-    ) r 
-      ON r.course_id = c.id
+        c.*,
+        u.name AS teacher_name,
+        r.avgRating,
+        r.totalRatings,
+        IF(e.user_id IS NOT NULL, 1, 0) AS isEnrolled,
+        IFNULL(e.progress, 0) AS progress
+      FROM courses c
+      LEFT JOIN users u ON c.teacher_id = u.id
+      LEFT JOIN (
+        SELECT 
+          course_id,
+          ROUND(AVG(rating),1) AS avgRating,
+          COUNT(id) AS totalRatings
+        FROM ratings
+        GROUP BY course_id
+      ) r ON r.course_id = c.id
+      LEFT JOIN enrollments e 
+        ON e.course_id = c.id
+        ${userId ? `AND e.user_id = ?` : ""}
+      WHERE c.status = 'approved'
+    `;
 
-    LEFT JOIN enrollments e 
-      ON e.course_id = c.id
-      ${userId ? `AND e.user_id = ?` : ""}
-
-    WHERE c.status = 'approved'
-  `;
-
-  db.query(query, userId ? [userId] : [], (err, courses) => {
-
-    if (err) {
-      console.error("GET COURSES ERROR:", err);
-      return res.status(500).json({ message: "Error fetching courses" });
-    }
+    const [courses] = await db.query(query, userId ? [userId] : []);
 
     // ================= NO USER =================
     if (!userId) {
+      const courseIds = courses.map(c => c.id);
 
-  const courseIds = courses.map(c => c.id);
-
-  if (courseIds.length === 0) {
-    return res.json([]);
-  }
-
-  db.query(
-    `SELECT id, course_id, video_url, title
-     FROM course_videos
-     WHERE is_deleted = FALSE
-     AND course_id IN (?)`,
-    [courseIds],
-    (err, videos) => {
-
-      if (err) {
-        console.error("VIDEO FETCH ERROR:", err);
-        return res.json(courses);
+      if (courseIds.length === 0) {
+        return res.json([]);
       }
+
+      const [videos] = await db.query(
+        `SELECT id, course_id, video_url, title
+         FROM course_videos
+         WHERE is_deleted = FALSE
+         AND course_id IN (?)`,
+        [courseIds]
+      );
 
       const videoMap = {};
 
@@ -248,99 +228,76 @@ exports.getCourses = (req, res) => {
 
       return res.json(previewCourses);
     }
-  );
 
-  return; // 🔥 IMPORTANT
-}
-
-    // ================= FETCH VIDEOS + PROGRESS =================
+    // ================= USER LOGGED =================
     const courseIds = courses.map(c => c.id);
 
     if (courseIds.length === 0) {
       return res.json([]);
     }
 
-    // ✅ FIXED QUERY HERE
-    db.query(
+    const [videos] = await db.query(
       `SELECT 
         v.id, 
         v.course_id, 
         v.video_url, 
         v.title,
-
         vw.time AS watchTime,
-
         IF(vp.completed = TRUE, 1, 0) AS isCompleted
-
       FROM course_videos v
-
       LEFT JOIN video_watch vw 
         ON vw.video_id = v.id AND vw.user_id = ?
-
       LEFT JOIN video_progress vp
         ON vp.video_id = v.id AND vp.user_id = ?
-
       WHERE v.is_deleted = FALSE
       AND v.course_id IN (?)`,
-      [userId, userId, courseIds],
-      (err, videos) => {
-
-        if (err) {
-          console.error("VIDEO FETCH ERROR:", err);
-          return res.json(courses);
-        }
-
-        // 🔥 GROUP VIDEOS + COMPLETED
-        const videoMap = {};
-
-        videos.forEach(v => {
-          if (!videoMap[v.course_id]) {
-            videoMap[v.course_id] = {
-              list: [],
-              completed: []
-            };
-          }
-
-          videoMap[v.course_id].list.push(v);
-
-          if (v.isCompleted) {
-            videoMap[v.course_id].completed.push(v.id);
-          }
-        });
-
-        // 🔥 ATTACH TO COURSES
-        const finalCourses = courses.map(c => ({
-          ...c,
-          videos: videoMap[c.id]?.list || [],
-          completedVideos: videoMap[c.id]?.completed || []
-        }));
-
-        // ================= SAFETY FILTER =================
-        const safeCourses = finalCourses.map(c => {
-
-          // 👨‍🏫 Teacher OR enrolled → full access
-            if (c.isEnrolled || c.teacher_id === userId) {
-              return c;
-            }
-            
-            // 👁️ Not enrolled → preview mode
-            return {
-              ...c,
-              videos: c.videos.map((v, i) => ({
-                ...v,
-                isPreview: i === 0
-              })),
-              completedVideos: []
-            };
-
-          return c;
-        });
-
-        res.json(safeCourses);
-      }
+      [userId, userId, courseIds]
     );
 
-  });
+    const videoMap = {};
+
+    videos.forEach(v => {
+      if (!videoMap[v.course_id]) {
+        videoMap[v.course_id] = {
+          list: [],
+          completed: []
+        };
+      }
+
+      videoMap[v.course_id].list.push(v);
+
+      if (v.isCompleted) {
+        videoMap[v.course_id].completed.push(v.id);
+      }
+    });
+
+    const finalCourses = courses.map(c => ({
+      ...c,
+      videos: videoMap[c.id]?.list || [],
+      completedVideos: videoMap[c.id]?.completed || []
+    }));
+
+    const safeCourses = finalCourses.map(c => {
+      if (c.isEnrolled || c.teacher_id === userId) {
+        return c;
+      }
+
+      return {
+        ...c,
+        videos: c.videos.map((v, i) => ({
+          ...v,
+          isPreview: i === 0
+        })),
+        completedVideos: []
+      };
+    });
+
+    res.json(safeCourses);
+
+  } catch (err) {
+    console.error("GET COURSES ERROR:", err);
+    res.status(500).json({ message: "Error fetching courses" });
+  }
 };
 
 exports.addRating = (req, res) => {
