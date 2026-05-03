@@ -96,6 +96,17 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
+
+
+app.get("/debug-db", (req, res) => {
+  db.query("SHOW TABLES", (err, data) => {
+    if (err) return res.json(err);
+    res.json(data);
+  });
+});
+
+
+
 // ================= FALLBACK (SAFE SPA HANDLING) =================
 app.use((req, res, next) => {
   // ❗ IMPORTANT: do NOT override API routes
@@ -105,6 +116,7 @@ app.use((req, res, next) => {
 
   res.sendFile(path.join(frontendPath, "index.html"));
 });
+
 
 // ================= SERVER =================
 const PORT = process.env.PORT || 4000;
