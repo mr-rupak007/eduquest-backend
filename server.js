@@ -68,7 +68,7 @@ app.use(
 );
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "*",
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 
@@ -88,7 +88,7 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 // ================= ROOT =================
 app.get("/", (req, res) => {
-  res.send("Backend running 🚀");
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
 });
 
 // ================= FALLBACK (VERY IMPORTANT - LAST) =================
