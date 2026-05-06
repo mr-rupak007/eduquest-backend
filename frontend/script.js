@@ -539,8 +539,18 @@ async function login() {
         currentUser = data.user;
 
         // 🔌 CONNECT SOCKET
-        socket = io("http://localhost:4000", {
-          transports: ["websocket"]
+        socket = io(API_BASE, {
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionAttempts: 5
+        });
+
+        socket.on("connect", () => {
+          console.log("Socket connected ✅");
+        });
+        
+        socket.on("connect_error", (err) => {
+          console.warn("Socket fallback mode:", err.message);
         });
         
         // 🔔 SOCKET EVENTS
@@ -844,6 +854,9 @@ function openCourse(id) {
   const c = courses.find(course => course.id === id);
   if (!c) return;
 
+  if (socket) {
+    socket.emit("joinCourse", id);
+  }
 
   showSection("browse");
 
@@ -861,8 +874,6 @@ function openCourse(id) {
     console.error("courseContainer not found ❌");
     return;
   }
-
-  // Ensure this runs after your course data ('c') is loaded
 
 container.innerHTML = `
     <div class="modern-lms-container">
@@ -4339,6 +4350,13 @@ function closeAddCourse() {
 
 function goBackToBrowse() {
 
+    // 🔌 LEAVE SOCKET ROOM
+    if (socket && selectedCourseId) {
+        socket.emit("leaveCourse", selectedCourseId);
+    }
+
+    selectedCourseId = null;
+
     // ✅ show hero again
     document.getElementById("hero")?.classList.remove("hidden");
 
@@ -4352,7 +4370,6 @@ function goBackToBrowse() {
     // ✅ reload courses
     fetchCourses();
 }
-
 
 async function viewStudentDetails(type, btn = null) {
 
