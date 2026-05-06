@@ -3,22 +3,36 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 exports.sendRegisterOtp = (req, res) => {
+
   const { email } = req.body;
 
+  // 🔥 CLEAN EXPIRED TEMP USERS
+  db.query(
+    "DELETE FROM users WHERE is_verified = 0 AND otp_expire < ?",
+    [Math.floor(Date.now() / 1000)],
+    () => {}
+  );
+
   if (!email) {
-    return res.status(400).json({ message: "Email required" });
+    return res.status(400).json({
+      message: "Email required"
+    });
   }
 
   db.query(
     "SELECT * FROM users WHERE email=?",
     [email],
+
     async (err, result) => {
+
       if (err) {
         console.error("SELECT ERROR:", err);
-        return res.status(500).json({ message: "DB error" });
+        return res.status(500).json({
+          message: "DB error"
+        });
       }
 
-      // 🔥 CASE 1: EMAIL EXISTS & VERIFIED → BLOCK
+      // ✅ VERIFIED ACCOUNT EXISTS
       if (result.length > 0 && result[0].is_verified) {
         return res.status(400).json({
           message: "Email already registered ❌"
@@ -26,45 +40,110 @@ exports.sendRegisterOtp = (req, res) => {
       }
 
       // 🔥 GENERATE OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      const expire = Math.floor(Date.now() / 1000) + 300;
-      const hashedOtp = await bcrypt.hash(otp, 10);
+      const otp = Math.floor(
+        100000 + Math.random() * 900000
+      ).toString();
 
-      // ================= UPDATE FLOW =================
+      const expire =
+        Math.floor(Date.now() / 1000) + 300;
+
+      const hashedOtp =
+        await bcrypt.hash(otp, 10);
+
+      // ====================================================
+      // UPDATE EXISTING TEMP USER
+      // ====================================================
+
       if (result.length > 0) {
+
         db.query(
           "UPDATE users SET otp_code=?, otp_expire=? WHERE email=?",
           [hashedOtp, expire, email],
+
           async (err2) => {
+
             if (err2) {
               console.error("UPDATE ERROR:", err2);
-              return res.status(500).json({ message: "OTP update failed" });
+
+              return res.status(500).json({
+                message: "OTP update failed"
+              });
             }
 
-            await sendEmail(email, otp, "verify");
-            return res.json({ message: "OTP sent 📧" });
+            try {
+
+              // ✅ SEND EMAIL
+              await sendEmail(email, otp, "verify");
+
+              return res.json({
+                message: "OTP sent 📧"
+              });
+
+            } catch (mailErr) {
+
+              console.error("EMAIL ERROR:", mailErr);
+
+              return res.status(500).json({
+                message: "Failed to send OTP email"
+              });
+            }
           }
         );
       }
 
-      // ================= INSERT FLOW =================
+      // ====================================================
+      // INSERT NEW TEMP USER
+      // ====================================================
+
       else {
+
         db.query(
-          "INSERT INTO users (name, email, otp_code, otp_expire, is_verified) VALUES (?, ?, ?, ?, FALSE)",
+
+          `INSERT INTO users 
+          (name, email, otp_code, otp_expire, is_verified) 
+          VALUES (?, ?, ?, ?, FALSE)`,
+
           [
             email.split("@")[0],
             email,
             hashedOtp,
             expire
           ],
+
           async (err2) => {
+
             if (err2) {
+
               console.error("INSERT ERROR:", err2);
-              return res.status(500).json({ message: "OTP save failed" });
+
+              return res.status(500).json({
+                message: "OTP save failed"
+              });
             }
 
-            await sendEmail(email, otp, "verify");
-            return res.json({ message: "OTP sent 📧" });
+            try {
+
+              // ✅ SEND EMAIL
+              await sendEmail(email, otp, "verify");
+
+              return res.json({
+                message: "OTP sent 📧"
+              });
+
+            } catch (mailErr) {
+
+              console.error("EMAIL ERROR:", mailErr);
+
+              // 🔥 ROLLBACK TEMP USER
+              db.query(
+                "DELETE FROM users WHERE email=? AND is_verified=0",
+                [email]
+              );
+
+              return res.status(500).json({
+                message: "Failed to send OTP email"
+              });
+            }
           }
         );
       }
@@ -168,6 +247,12 @@ exports.login = (req, res) => {
 
       const user = users[0];
 
+      if (!user.is_verified) {
+        return res.status(403).json({
+          message: "Verify your email first"
+        });
+      }
+
       if (!user.password) {
         return res.status(400).json({
           message: "Complete registration first"
@@ -221,7 +306,7 @@ exports.login = (req, res) => {
 exports.getAllUsers = (req, res) => {
 
   db.query(
-    "SELECT id, name, email, mobile, role, is_blocked FROM users",
+    "SELECT id, name, email, mobile, role, is_blocked FROM users WHERE is_verified = 1",
     (err, data) => {
 
       if (err) {
