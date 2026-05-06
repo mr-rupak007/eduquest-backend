@@ -1389,7 +1389,7 @@ async function toggleCourseDetails(forceOpen = false) {
     if (!box) return;
 
     // 🔥 SAME BUTTON CLICK → TOGGLE CLOSE
-    if (currentOpenPanel === "courses" && !forceOpen) {
+    if (currentOpenPanel === "courses" && !forceOpen && box.dataset.type !== "comments" && box.dataset.type !== "ratings") {
         box.classList.remove("open");
         box.innerHTML = "";
 
@@ -2105,18 +2105,17 @@ function goBackToDetails() {
     const box = document.getElementById("courseDetailsBox");
     if (!box) return;
 
-    // 🔒 CLOSE CURRENT VIEW
+    // close current panel
     box.classList.remove("open");
     box.classList.add("closing");
-
-    // ✅ FIX: use nav system (NOT setBreadcrumb)
-    goBackNav(); // removes "Comments"
 
     setTimeout(() => {
 
         box.classList.remove("closing");
 
-        // 🔥 REOPEN COURSES PROPERLY
+        // ✅ reopen ONLY courses panel
+        currentOpenPanel = null;
+
         toggleCourseDetails(true);
 
     }, 200);
@@ -2459,8 +2458,9 @@ function viewComments(courseId) {
 
     setTimeout(() => {
 
+        // 👇 CHANGED class from "comment-wrapper" to "students-wrapper"
         box.innerHTML = `
-            <div class="comment-wrapper fade-anim">
+            <div class="students-wrapper fade-anim"> 
 
                 <div class="comment-header">
                     <h3>💬 Course Comments</h3>
@@ -4195,14 +4195,16 @@ function viewRaters(courseId) {
         box.innerHTML = `
             <div class="ratings-wrapper fade-anim">
 
-                <div class="details-header">
+                <div class="ratings-header">
 
-                <h3>⭐ Student Ratings</h3>
-
+                    <div class="ratings-title">
+                        <h3>⭐ Student Ratings</h3>
+                    </div>
+                
                     <button class="back-btn-modern" onclick="toggleCourseDetails(true)">
-                        ⬅️ Back
+                        ⬅ Back
                     </button>
-
+                
                 </div>
 
                 <div id="ratingList" class="ratings-list">
@@ -5200,6 +5202,10 @@ async function toggleEarningsDetails() {
 
                     <h3>💰 Earnings Overview</h3>
 
+                    <button class="back-btn-modern" onclick="goBackFromEarnings()">
+                        ⬅ Back
+                    </button>
+
                     <div class="empty-box">
                         <p>💸 No earnings yet</p>
                         <small>Create and sell courses to start earning</small>
@@ -5261,6 +5267,29 @@ async function toggleEarningsDetails() {
         box.innerHTML = "<p>Error loading earnings</p>";
         box.classList.add("open");
     }
+}
+
+function goBackFromEarnings() {
+
+    const box = document.getElementById("courseDetailsBox");
+
+    if (!box) return;
+
+    // close earnings panel
+    box.classList.remove("open");
+    box.classList.add("closing");
+
+    setTimeout(() => {
+
+        box.classList.remove("closing");
+        box.innerHTML = "";
+
+        currentOpenPanel = null;
+
+        // ✅ return to teacher dashboard
+        showSection("teacherDashboard");
+
+    }, 200);
 }
 
 function renderEarningsChart(monthlyData) {
