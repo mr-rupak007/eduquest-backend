@@ -1,6 +1,8 @@
 const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+// SEND OTP
+const { sendEmail, sendWelcomeEmail } = require("../utils/sendEmail");
 
 exports.sendRegisterOtp = (req, res) => {
 
@@ -457,9 +459,6 @@ exports.updateProfile = async (req, res) => {
 };
 
 const crypto = require("crypto");
-
-// SEND OTP
-const { sendEmail, sendWelcomeEmail } = require("../utils/sendEmail");
 
 exports.forgotPassword = async (req, res) => {
 
