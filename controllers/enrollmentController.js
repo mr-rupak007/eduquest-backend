@@ -97,7 +97,6 @@ exports.getMyCourses = (req, res) => {
             }
 
             res.json(data);
-            console.log("COURSE DATA:", data);
         }
     );
 };

@@ -97,20 +97,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(frontendPath, "index.html"));
 });
 
-
-
-app.get("/debug-db", async (req, res) => {
-  try {
-    const [rows] = await db.query("SHOW TABLES");
-    res.json(rows);
-  } catch (err) {
-    console.error("DEBUG ERROR:", err);
-    res.status(500).json(err.message);
-  }
-});
-
-
-
 // ================= FALLBACK (SAFE SPA HANDLING) =================
 app.use((req, res, next) => {
   // ❗ IMPORTANT: do NOT override API routes

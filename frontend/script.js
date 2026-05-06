@@ -514,7 +514,7 @@ async function login() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contact: user,
+                mobile: user,
                 password: pass
             })
         });
@@ -539,7 +539,9 @@ async function login() {
         currentUser = data.user;
 
         // 🔌 CONNECT SOCKET
-        socket = io(API_BASE);
+        socket = io("http://localhost:4000", {
+          transports: ["websocket"]
+        });
         
         // 🔔 SOCKET EVENTS
         socket.on("newComment", (data) => {
@@ -3912,7 +3914,7 @@ async function adminLogin() {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
-                contact: user,
+                mobile: user,
                 password: pass
             })
         });
@@ -5584,7 +5586,7 @@ async function resetPassword() {
 }
 
 async function verifyOTP() {
-    const email = document.getElementById("email").value.trim(); // ✅ FIXED
+    const email = document.getElementById("email").value.trim();// ✅ FIXED
 
     // ✅ ONLY target register OTP box
     const inputs = document.querySelectorAll("#otpBox .otp-input");

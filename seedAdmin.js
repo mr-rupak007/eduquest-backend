@@ -6,7 +6,7 @@ async function createAdmin() {
     const name = "Admin";
     const email = "admin@example.com";
     const mobile = "9999999999";
-    const plainPassword = "admin123";
+    const plainPassword = "AdminRupak@90";
 
     // 🔐 hash password
     const hashedPassword = await bcrypt.hash(plainPassword, 10);

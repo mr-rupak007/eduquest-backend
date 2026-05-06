@@ -14,7 +14,4 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-// 🔥 PROMISE WRAPPER (IMPORTANT)
-const promiseDb = db.promise();
-
-module.exports = promiseDb;
+module.exports = db;

@@ -2,170 +2,212 @@ const db = require("../config/db");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-exports.sendRegisterOtp = async (req, res) => {
+exports.sendRegisterOtp = (req, res) => {
   const { email } = req.body;
 
   if (!email) {
     return res.status(400).json({ message: "Email required" });
   }
 
-  try {
-
-    db.query(
-      "SELECT * FROM users WHERE email=?",
-      [email],
-      async (err, result) => {
-
-        if (err) {
-          return res.status(500).json({ message: "DB error" });
-        }
-
-        // 🔥 CASE 1: EMAIL EXISTS & VERIFIED → BLOCK
-        if (result.length > 0 && result[0].is_verified) {
-          return res.status(400).json({
-            message: "Email already registered ❌"
-          });
-        }
-
-        // 🔥 GENERATE OTP
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expire = Math.floor(Date.now() / 1000) + 300;
-        const hashedOtp = await bcrypt.hash(otp, 10);
-
-        if (result.length > 0) {
-          // 🔁 existing but NOT verified → update OTP
-          db.query(
-            "UPDATE users SET otp_code=?, otp_expire=? WHERE email=?",
-            [hashedOtp, expire, email]
-          );
-        } else {
-          // 🆕 new user → create temp record
-          db.query(
-            "INSERT INTO users (name, email, otp_code, otp_expire, is_verified) VALUES (?, ?, ?, ?, FALSE)",
-            [email, email, hashedOtp, expire]
-          );
-        }
-
-        await sendEmail(email, otp, "verify");
-
-        res.json({ message: "OTP sent 📧" });
+  db.query(
+    "SELECT * FROM users WHERE email=?",
+    [email],
+    async (err, result) => {
+      if (err) {
+        console.error("SELECT ERROR:", err);
+        return res.status(500).json({ message: "DB error" });
       }
-    );
 
-  } catch (err) {
-    res.status(500).json({ message: "OTP failed" });
-  }
+      // 🔥 CASE 1: EMAIL EXISTS & VERIFIED → BLOCK
+      if (result.length > 0 && result[0].is_verified) {
+        return res.status(400).json({
+          message: "Email already registered ❌"
+        });
+      }
+
+      // 🔥 GENERATE OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expire = Math.floor(Date.now() / 1000) + 300;
+      const hashedOtp = await bcrypt.hash(otp, 10);
+
+      // ================= UPDATE FLOW =================
+      if (result.length > 0) {
+        db.query(
+          "UPDATE users SET otp_code=?, otp_expire=? WHERE email=?",
+          [hashedOtp, expire, email],
+          async (err2) => {
+            if (err2) {
+              console.error("UPDATE ERROR:", err2);
+              return res.status(500).json({ message: "OTP update failed" });
+            }
+
+            await sendEmail(email, otp, "verify");
+            return res.json({ message: "OTP sent 📧" });
+          }
+        );
+      }
+
+      // ================= INSERT FLOW =================
+      else {
+        db.query(
+          "INSERT INTO users (name, email, otp_code, otp_expire, is_verified) VALUES (?, ?, ?, ?, FALSE)",
+          [
+            email.split("@")[0],
+            email,
+            hashedOtp,
+            expire
+          ],
+          async (err2) => {
+            if (err2) {
+              console.error("INSERT ERROR:", err2);
+              return res.status(500).json({ message: "OTP save failed" });
+            }
+
+            await sendEmail(email, otp, "verify");
+            return res.json({ message: "OTP sent 📧" });
+          }
+        );
+      }
+    }
+  );
 };
 
 // REGISTER
 exports.register = async (req, res) => {
   const { name, email, mobile, password, role, age, location } = req.body;
 
-  db.query(
-    "SELECT otp_code FROM users WHERE email=?",
-    [email],
-    async (err, result) => {
+  if (!name || !email || !mobile || !password) {
+    return res.status(400).json({ message: "All fields required" });
+  }
 
-      if (err) {
-        return res.status(500).json({ message: "DB error" });
-      }
+  try {
+    // 🔐 HASH PASSWORD
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      // ❌ user not found → no OTP sent
-      if (!result.length) {
-        return res.status(400).json({ message: "Send OTP first" });
-      }
+    db.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email],
+      (err, users) => {
 
-      // ❌ OTP not verified
-      if (result[0].otp_code !== null) {
-        return res.status(400).json({ message: "Verify OTP first" });
-      }
-
-      // ✅ OTP verified → allow register
-      const hashed = await bcrypt.hash(password, 10);
-
-      db.query(
-        `UPDATE users 
-         SET name=?, mobile=?, password=?, role=?, age=?, location=? 
-         WHERE email=?`,
-        [name, mobile, hashed, role, age, location, email],
-        (err2) => {
-
-          if (err2) {
-            return res.status(500).json({ message: "Registration failed" });
-          }
-
-          res.json({ message: "Registered successfully 🎉" });
+        if (err) {
+          console.error("DB ERROR:", err);
+          return res.status(500).json({ message: "DB error" });
         }
-      );
-    }
-  );
+
+        if (!users || users.length === 0) {
+          return res.status(404).json({ message: "User not found" });
+        }
+
+        const user = users[0];
+
+        // 🔥 MUST be verified first
+        if (!user.is_verified) {
+          return res.status(400).json({
+            message: "Verify OTP first"
+          });
+        }
+
+        // 🔥 UPDATE existing user
+        db.query(
+          `UPDATE users 
+           SET name=?, mobile=?, password=?, role=?, age=?, location=? 
+           WHERE email=?`,
+          [
+            name,
+            mobile,
+            hashedPassword, // ✅ FIXED (was plain password)
+            role || "student",
+            age || null,
+            location || null,
+            email
+          ],
+          (err2) => {
+
+            if (err2) {
+              console.error("UPDATE ERROR:", err2);
+              return res.status(500).json({ message: "Update failed" });
+            }
+
+            return res.json({ message: "Registered successfully" });
+          }
+        );
+      }
+    );
+
+  } catch (err) {
+    console.error("REGISTER ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
 // LOGIN
 exports.login = (req, res) => {
-  const { contact, password } = req.body;
 
-  if (!contact || !password) {
-    return res.status(400).json({ message: "Missing fields" });
+  const { mobile, password } = req.body;
+
+  if (!mobile || !password) {
+    return res.status(400).json({ message: "Enter credentials" });
   }
 
   db.query(
-    "SELECT * FROM users WHERE email = ? OR mobile = ?",
-    [contact, contact],
-    async (err, result) => {
+    "SELECT * FROM users WHERE mobile = ? OR email = ?",
+    [mobile, mobile],
+    (err, users) => {
 
       if (err) {
-        console.error("DB ERROR:", err);
-        return res.status(500).json({ message: "Database error" });
+        console.error("LOGIN DB ERROR:", err);
+        return res.status(500).json({ message: "DB error" });
       }
 
-      if (!result || result.length === 0) {
+      if (!users || users.length === 0) {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const user = result[0];
+      const user = users[0];
 
-        if (user.is_blocked) {
-            return res.status(403).json({
-                message: "Your account is blocked by admin 🚫"
-            });
-        }  
+      if (!user.password) {
+        return res.status(400).json({
+          message: "Complete registration first"
+        });
+      }
 
-        if (!user.is_verified) {
-          return res.status(403).json({
-            message: "Please verify your email first"
+      // 🔐 PASSWORD CHECK
+      bcrypt.compare(password, user.password, (err, isMatch) => {
+
+        if (err) {
+          return res.status(500).json({ message: "Error comparing password" });
+        }
+
+        if (!isMatch) {
+          return res.status(400).json({
+            message: "Invalid password"
           });
         }
 
-      const match = await bcrypt.compare(password, user.password);
-      if (!match) {
-        return res.status(401).json({ message: "Wrong password" });
-      }
+        // 🔥 JWT TOKEN (ONLY PLACE RESPONSE HAPPENS)
+        const token = jwt.sign(
+          { id: user.id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+        );
 
-      const token = jwt.sign(
-        { id: user.id, role: user.role },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_EXPIRES_IN }
-      );
+        return res.json({
+          token,
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            mobile: user.mobile,
+            age: user.age,
+            location: user.location,
+            role: user.role
+          }
+        });
 
-      res.status(200).json({
-        token,
-        user: {
-           id: user.id,
-           name: user.name,
-           email: user.email,
-           mobile: user.mobile,
-           age: user.age,
-           location: user.location,
-           role: user.role,
-           subject: user.subject,
-           specialization: user.specialization,
-           occupation: user.occupation
-        }
       });
-    } 
-  ); 
-}; 
+    }
+  );
+};
 
 
 // ================= GET ALL USERS =================
@@ -328,7 +370,6 @@ const crypto = require("crypto");
 const sendEmail = require("../utils/sendEmail");
 
 exports.forgotPassword = async (req, res) => {
-  console.log("🔥 FORGOT PASSWORD HIT");
 
   const { email } = req.body;
 

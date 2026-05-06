@@ -129,3 +129,23 @@ exports.verifyPayment = (req, res) => {
     }
   );
 };
+
+exports.getAdminCommissionChart = (req, res) => {
+  db.query(
+    `SELECT 
+       DATE(created_at) as date,
+       SUM(amount * 0.1) as adminCommission
+     FROM payments
+     WHERE status = 'success'
+     GROUP BY DATE(created_at)
+     ORDER BY date ASC`,
+    (err, rows) => {
+      if (err) {
+        console.error("CHART ERROR:", err);
+        return res.status(500).json({ message: "Error" });
+      }
+
+      res.json(rows);
+    }
+  );
+};

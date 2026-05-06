@@ -5,5 +5,6 @@ const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/create-order", paymentController.createOrder);
 router.post("/verify", authMiddleware, paymentController.verifyPayment);
+router.get("/admin-commission-chart", paymentController.getAdminCommissionChart);
 
 module.exports = router;
