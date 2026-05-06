@@ -5415,11 +5415,10 @@ function toggleChart() {
 }
 
 async function sendOTP(type = "register") {
-  const emailInput =
-    document.getElementById("email") ||   // register
-    document.getElementById("fpContact"); // forgot password
-
-  const email = emailInput?.value.trim();
+  const email =
+  type === "register"
+    ? document.getElementById("email").value.trim()
+    : document.getElementById("fpContact").value.trim();
 
   const btn = document.getElementById("sendOtpBtn");
 
@@ -5476,7 +5475,12 @@ async function sendOTP(type = "register") {
     btn.disabled = true;
 
     // 🔥 CLEAR OLD OTP INPUTS
-    document.querySelectorAll(".otp-input").forEach(input => input.value = "");
+    const targetInputs =
+      type === "register"
+        ? document.querySelectorAll("#otpBox .otp-input")
+        : document.querySelectorAll("#otpSection .otp-input");
+    
+    targetInputs.forEach(input => input.value = "");
 
     // ⏱ START TIMER
     startOTPTimer();
@@ -5524,7 +5528,7 @@ function getOTPValue() {
 async function resetPassword() {
   const contact = document.getElementById("fpContact").value.trim();
 
-  const otpInputs = document.querySelectorAll(".otp-input");
+  const otpInputs = document.querySelectorAll("#otpSection .otp-input");
   const otp = Array.from(otpInputs)
     .map(input => input.value)
     .join("");

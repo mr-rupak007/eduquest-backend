@@ -128,6 +128,9 @@ exports.register = async (req, res) => {
               return res.status(500).json({ message: "Update failed" });
             }
 
+            // ✅ SEND WELCOME EMAIL
+            sendWelcomeEmail(email, name);
+
             return res.json({ message: "Registered successfully" });
           }
         );
@@ -371,7 +374,7 @@ exports.updateProfile = async (req, res) => {
 const crypto = require("crypto");
 
 // SEND OTP
-const sendEmail = require("../utils/sendEmail");
+const { sendEmail, sendWelcomeEmail } = require("../utils/sendEmail");
 
 exports.forgotPassword = async (req, res) => {
 
