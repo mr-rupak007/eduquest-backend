@@ -200,10 +200,14 @@ exports.login = (req, res) => {
             mobile: user.mobile,
             age: user.age,
             location: user.location,
-            role: user.role
+            role: user.role,
+        
+            // 👨‍🏫 Teacher profile fields
+            subject: user.subject,
+            specialization: user.specialization,
+            occupation: user.occupation
           }
         });
-
       });
     }
   );
