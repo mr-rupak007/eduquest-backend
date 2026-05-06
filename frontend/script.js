@@ -1156,6 +1156,46 @@ function checkStrength() {
   text.style.color = color;
 }
 
+function checkProfileStrength() {
+
+  let val = document.getElementById("profilePass")?.value;
+
+  let bar = document.getElementById("profileStrengthBar");
+  let text = document.getElementById("profileStrengthText");
+
+  if (!bar || !text) return;
+
+  if (!val) {
+    bar.style.setProperty("--width", "0%");
+    text.innerText = "";
+    return;
+  }
+
+  let score = 0;
+
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+
+  let percent = (score / 5) * 100;
+
+  let label = percent < 40 ? "Weak"
+            : percent < 75 ? "Medium"
+            : "Strong";
+
+  let color = percent < 40 ? "#ef4444"
+            : percent < 75 ? "#f59e0b"
+            : "#22c55e";
+
+  bar.style.setProperty("--width", percent + "%");
+  bar.style.setProperty("--color", color);
+
+  text.innerText = label;
+  text.style.color = color;
+}
+
 function checkPasswordMatch() {
   const pass = document.getElementById("profilePass").value;
   const confirm = document.getElementById("confirmProfilePass").value;

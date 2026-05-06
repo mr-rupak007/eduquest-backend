@@ -547,6 +547,7 @@
       id="regPass" 
       placeholder=" "
       oninput="checkStrength()"
+      required
     >
     <label>Password</label>
     <span class="toggle-pass" onclick="togglePassword('regPass', this)">👁</span>
@@ -558,6 +559,7 @@
       type="password" 
       id="confirmPass" 
       placeholder=" "
+      required
     >
     <label>Confirm Password</label>
     <span class="toggle-pass" onclick="togglePassword('confirmPass', this)">👁</span>
@@ -682,7 +684,7 @@
     <input 
       type="password" 
       id="profilePass" 
-      oninput="checkStrength('profile')" 
+      oninput="checkProfileStrength()" 
       placeholder=" "
     >
     <label>New Password</label>
@@ -692,7 +694,7 @@
   <!-- ✅ FIXED (UNIQUE IDS) -->
   <div class="strength-wrapper">
     <div id="profileStrengthBar"></div>
-    <span id="profileStrengthText">Password strength</span>
+    <span id="profileStrengthText"></span>
   </div>
 
   <div class="input-group password-group">
