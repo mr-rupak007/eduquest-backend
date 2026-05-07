@@ -2,7 +2,11 @@ const nodemailer = require("nodemailer");
 
 const sendEmail = async (to, otp, type = "reset") => {
   try {
+
+    console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS EXISTS:", !!process.env.EMAIL_PASS);
     const transporter = nodemailer.createTransport({
+      
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
