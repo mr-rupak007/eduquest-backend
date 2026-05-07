@@ -75,6 +75,27 @@ app.use(cors({
 
 app.use(express.json());
 
+const { sendEmail } = require("./utils/sendEmail");
+
+app.get("/test-email", async (req, res) => {
+  try {
+    await sendEmail(
+      "rupakpatra47@gmail.com",
+      "123456",
+      "verify"
+    );
+
+    res.send("EMAIL SENT SUCCESS");
+  } catch (err) {
+    console.error("TEST EMAIL ERROR:", err);
+
+    res.status(500).json({
+      error: err.message,
+      full: err
+    });
+  }
+});
+
 // ================= API ROUTES =================
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
