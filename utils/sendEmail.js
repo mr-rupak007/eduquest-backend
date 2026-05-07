@@ -59,7 +59,7 @@ const sendEmail = async (to, otp, type = "reset") => {
       `
     });
   } catch (err) {
-  console.error("❌ EMAIL ERROR:", err.message);
+  console.error("❌ EMAIL ERROR FULL:", err);
   console.error(err);
   throw err; // IMPORTANT
 }
