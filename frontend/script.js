@@ -26,7 +26,7 @@ let rejectCourseId = null;
 const API_BASE =
   window.location.hostname === "localhost"
     ? "http://localhost:4000"
-    : "https://eduquest-backend-s5l7.onrender.com";
+    : "";
 let socket = null;
 window.otpVerified = false;
 
