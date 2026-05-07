@@ -5,14 +5,19 @@ const sendEmail = async (to, otp, type = "reset") => {
 
     console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("EMAIL_PASS EXISTS:", !!process.env.EMAIL_PASS);
-    const transporter = nodemailer.createTransport({
-      
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+await transporter.verify();
+
+console.log("✅ SMTP READY");
 
     await transporter.sendMail({
       from: `"EDUQUEST" <${process.env.EMAIL_USER}>`,
@@ -71,13 +76,19 @@ console.log("EMAIL_PASS EXISTS:", !!process.env.EMAIL_PASS);
 
 const sendWelcomeEmail = async (to, name) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+await transporter.verify();
+
+console.log("✅ SMTP READY");
 
     await transporter.sendMail({
       from: `"EDUQUEST" <${process.env.EMAIL_USER}>`,
